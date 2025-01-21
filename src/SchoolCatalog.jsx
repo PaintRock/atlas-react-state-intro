@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 
+const PAGE_SIZE = 5;
+
 export default function SchoolCatalog() {
   const [courses, setCourses] = useState([]);
   const [courseFilter, setCourseFilter] = useState("");
   const [sortColumn, setSortColumn] = useState(null);
   const [sortDirection, setSortDirection] = useState('asc');
-  
+  const [page, setPage] = useState(1);
+
   useEffect(() => {
     fetch('/api/courses.json')
       .then((response) => response.json())
@@ -41,6 +44,27 @@ export default function SchoolCatalog() {
       course.courseName.toLowerCase().includes(courseFilter.toLowerCase()) ||
       course.courseNumber.toLowerCase().includes(courseFilter.toLowerCase())
     );
+
+  // Pagination calculations
+  const currentPageData = sortedAndFilteredCourses.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE
+  );
+  const hasMore = sortedAndFilteredCourses.length > page * PAGE_SIZE;
+  const hasLess = page > 1;
+
+  // Pagination handlers
+  const handleNextPage = () => {
+    if (hasMore) {
+      setPage(page + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (hasLess) {
+      setPage(page - 1);
+    }
+  };
   
   return (
     <div className="school-catalog">
@@ -63,7 +87,7 @@ export default function SchoolCatalog() {
           </tr>
         </thead>
         <tbody>
-          {sortedAndFilteredCourses.map((course) => (
+          {currentPageData.map((course) => (
             <tr key={course.courseNumber}>
               <td>{course.trimester}</td>
               <td>{course.courseNumber}</td>
@@ -78,8 +102,18 @@ export default function SchoolCatalog() {
         </tbody>
       </table>
       <div className="pagination">
-        <button>Previous</button>
-        <button>Next</button>
+        <button 
+          onClick={handlePrevPage} 
+          disabled={!hasLess}
+        >
+          Previous
+        </button>
+        <button 
+          onClick={handleNextPage} 
+          disabled={!hasMore}
+        >
+          Next
+        </button>
       </div>
     </div>
   );
