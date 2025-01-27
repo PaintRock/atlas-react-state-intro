@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useCourses } from './CourseContext';
 
 const PAGE_SIZE = 5;
 
@@ -8,12 +9,17 @@ export default function SchoolCatalog() {
   const [sortColumn, setSortColumn] = useState(null);
   const [sortDirection, setSortDirection] = useState('asc');
   const [page, setPage] = useState(1);
+  const { enrollCourse, enrolledCourses} = useCourses();
 
   useEffect(() => {
     fetch('/api/courses.json')
       .then((response) => response.json())
       .then((data) => setCourses(data));
   }, []);
+
+  const isEnrolled = (courseNumber) => {
+    return enrolledCourses.some(course => course.courseNumber === courseNumber);
+  };
 
   const handleSort = (column) => {
     if (sortColumn === column) {
@@ -95,11 +101,17 @@ export default function SchoolCatalog() {
               <td>{course.semesterCredits}</td>
               <td>{course.totalClockHours}</td>
               <td>
-                <button>Enroll</button>
+                <button
+                onClick={() => enrollCourse(course)}
+                disabled={isEnrolled(course.courseNumber)}
+                >
+                  {isEnrolled(course.courseNumber) ? 'Enrolled' : 'Enroll'}
+                </button>
               </td>
             </tr>
           ))}
         </tbody>
+        
       </table>
       <div className="pagination">
         <button 
